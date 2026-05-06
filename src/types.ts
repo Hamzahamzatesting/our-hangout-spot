@@ -4,6 +4,9 @@ export interface UserProfile {
   avatar: string;
   avatarName: string;
   avatarBg: string;
+  crewRole?: string;
+  crewRoleEmoji?: string;
+  crewRoleLine?: string;
   totalPlans?: number;
 }
 
@@ -11,6 +14,8 @@ export interface MemberProfile {
   name: string;
   avatar: string;
   avatarBg: string;
+  crewRole?: string;
+  crewRoleEmoji?: string;
 }
 
 export interface PlanOption {

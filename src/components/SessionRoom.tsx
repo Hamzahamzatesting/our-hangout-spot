@@ -216,7 +216,11 @@ export default function SessionRoom({ sessionId, profile, onBack }: Props) {
           {members.slice(0, 6).map((m, i) => {
             const av = getAvatarByEmoji(m.avatar);
             return (
-              <div key={i} className={`avatar-bubble-sm bg-gradient-to-br ${av.bg}`}>
+              <div
+                key={i}
+                className={`avatar-bubble-sm bg-gradient-to-br ${av.bg}`}
+                title={m.crewRole ? `${m.name} · ${m.crewRole}` : m.name}
+              >
                 {m.avatar}
               </div>
             );

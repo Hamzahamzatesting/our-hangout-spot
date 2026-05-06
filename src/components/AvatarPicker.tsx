@@ -3,7 +3,7 @@ import { User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { motion, AnimatePresence } from 'motion/react';
-import { AVATARS, Avatar } from '../lib/avatars';
+import { AVATARS, Avatar, CREW_ROLES, CrewRole } from '../lib/avatars';
 import { UserProfile } from '../types';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 
 export default function AvatarPicker({ user, onSaved }: Props) {
   const [selected, setSelected] = useState<Avatar | null>(null);
+  const [role, setRole] = useState<CrewRole | null>(null);
   const [name, setName] = useState(user.displayName ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -20,6 +21,7 @@ export default function AvatarPicker({ user, onSaved }: Props) {
   const save = async () => {
     if (!selected) { setError('Pick your cartoon face first'); return; }
     if (!name.trim()) { setError('Enter your full name'); return; }
+    if (!role) { setError('Pick your crew role'); return; }
     setSaving(true);
     setError('');
 
@@ -29,6 +31,9 @@ export default function AvatarPicker({ user, onSaved }: Props) {
       avatar: selected.emoji,
       avatarName: selected.name,
       avatarBg: selected.bg,
+      crewRole: role.label,
+      crewRoleEmoji: role.emoji,
+      crewRoleLine: role.line,
       totalPlans: 0,
     };
 
@@ -38,12 +43,19 @@ export default function AvatarPicker({ user, onSaved }: Props) {
         avatar: profile.avatar,
         avatarName: profile.avatarName,
         avatarBg: profile.avatarBg,
+        crewRole: profile.crewRole,
+        crewRoleEmoji: profile.crewRoleEmoji,
+        crewRoleLine: profile.crewRoleLine,
         totalPlans: 0,
         lastActive: serverTimestamp(),
       });
       onSaved(profile);
     } catch (e: any) {
-      setError('Could not save — try again');
+      if (e?.code === 'permission-denied') {
+        setError('Profile save is blocked by Firestore rules. Publish the users rule in Firebase.');
+      } else {
+        setError(e?.message ?? 'Could not save — try again');
+      }
       setSaving(false);
     }
   };
@@ -62,7 +74,7 @@ export default function AvatarPicker({ user, onSaved }: Props) {
               style={{ fontFamily: 'Anton, sans-serif' }}>
             Make your card
           </h1>
-          <p className="text-white/40 text-sm mt-2">Full name and cartoon face are required to enter</p>
+          <p className="text-white/40 text-sm mt-2">Full name, cartoon face, and crew role are required to enter</p>
         </div>
 
         {/* Avatar grid */}
@@ -103,6 +115,32 @@ export default function AvatarPicker({ user, onSaved }: Props) {
           )}
         </AnimatePresence>
 
+        {/* Crew role */}
+        <div>
+          <label className="label-xs block mb-2">Crew role</label>
+          <div className="grid grid-cols-2 gap-2">
+            {CREW_ROLES.map((r) => (
+              <motion.button
+                key={r.label}
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setRole(r)}
+                className={`min-h-16 rounded-2xl border px-3 py-3 text-left transition-all ${
+                  role?.label === r.label
+                    ? 'border-cyan-400 bg-cyan-400/10 shadow-[0_0_24px_rgba(34,211,238,0.12)]'
+                    : 'border-white/10 bg-white/5 hover:bg-white/8'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{r.emoji}</span>
+                  <span className="font-bold text-white text-sm">{r.label}</span>
+                </div>
+                <p className="text-white/35 text-[11px] mt-1">{r.line}</p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
         {/* Name input */}
         <div>
           <label className="label-xs block mb-2">Full name</label>
@@ -133,7 +171,7 @@ export default function AvatarPicker({ user, onSaved }: Props) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={save}
-          disabled={saving || !selected || !name.trim()}
+          disabled={saving || !selected || !role || !name.trim()}
           className="btn-primary w-full text-base font-black uppercase tracking-widest mt-auto"
         >
           {saving ? (

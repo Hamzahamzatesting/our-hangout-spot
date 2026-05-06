@@ -63,6 +63,8 @@ export default function CreatePlan({ profile, onCreated, onBack }: Props) {
             name: profile.displayName,
             avatar: profile.avatar,
             avatarBg: avatar.bg,
+            crewRole: profile.crewRole,
+            crewRoleEmoji: profile.crewRoleEmoji,
           },
         },
         mysteryMode,

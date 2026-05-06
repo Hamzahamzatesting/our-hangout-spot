@@ -42,6 +42,9 @@ export default function Dashboard({ profile, onSelectSession, onCreatePlan }: Pr
   const socialComment = SOCIAL_COMMENTS[commentIndex];
 
   const avatar = getAvatarByEmoji(profile.avatar);
+  const roleLine = profile.crewRole
+    ? `${profile.crewRoleEmoji ?? '✨'} ${profile.crewRole} · ${profile.displayName} ${socialComment}`
+    : `${profile.displayName} ${socialComment}`;
 
   return (
     <div className="min-h-screen flex flex-col pb-32">
@@ -77,7 +80,7 @@ export default function Dashboard({ profile, onSelectSession, onCreatePlan }: Pr
           <div className="flex-1 min-w-0">
             <p className="font-bold text-lg truncate">{profile.displayName}</p>
             <p className="text-white/40 text-xs mt-0.5 truncate">
-              {profile.displayName} {socialComment}
+              {roleLine}
             </p>
           </div>
           <div className="text-right shrink-0">

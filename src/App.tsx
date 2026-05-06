@@ -43,6 +43,8 @@ export default function App() {
           name: profile.displayName,
           avatar: profile.avatar,
           avatarBg: profile.avatarBg,
+          crewRole: profile.crewRole,
+          crewRoleEmoji: profile.crewRoleEmoji,
         },
       });
     } catch {
