@@ -5,16 +5,16 @@ export interface Avatar {
 }
 
 export const AVATARS: Avatar[] = [
-  { emoji: '🐼', name: 'Chill Panda',   bg: 'from-emerald-400 to-teal-600'   },
-  { emoji: '🐺', name: 'Alpha Wolf',    bg: 'from-slate-400 to-gray-700'     },
-  { emoji: '🐸', name: 'Chill Frog',    bg: 'from-green-400 to-lime-600'     },
-  { emoji: '🐵', name: 'Chaos Monkey',  bg: 'from-orange-400 to-red-500'     },
-  { emoji: '🦊', name: 'Smooth Fox',    bg: 'from-orange-500 to-amber-600'   },
-  { emoji: '🦁', name: 'The Boss',      bg: 'from-yellow-400 to-orange-500'  },
-  { emoji: '🐨', name: 'Zen Koala',     bg: 'from-blue-300 to-indigo-500'    },
-  { emoji: '🦋', name: 'Free Spirit',   bg: 'from-purple-400 to-fuchsia-500' },
-  { emoji: '🐯', name: 'Wild Tiger',    bg: 'from-yellow-400 to-orange-600'  },
-  { emoji: '🦅', name: 'Bold Eagle',    bg: 'from-sky-400 to-blue-700'       },
+  { emoji: '🙂', name: 'Easygoing',    bg: 'from-emerald-400 to-teal-600'   },
+  { emoji: '😎', name: 'Cool Energy',  bg: 'from-sky-400 to-blue-700'       },
+  { emoji: '🤓', name: 'Planner',      bg: 'from-indigo-400 to-violet-600'   },
+  { emoji: '😂', name: 'Comic Relief', bg: 'from-yellow-300 to-orange-500'  },
+  { emoji: '🥳', name: 'Party Starter', bg: 'from-pink-400 to-fuchsia-600'  },
+  { emoji: '🤠', name: 'Wildcard',     bg: 'from-amber-400 to-red-500'      },
+  { emoji: '😇', name: 'Good Vibes',   bg: 'from-cyan-300 to-blue-500'      },
+  { emoji: '🤩', name: 'Hype Mode',    bg: 'from-purple-400 to-fuchsia-500' },
+  { emoji: '😌', name: 'Calm One',     bg: 'from-green-300 to-lime-600'     },
+  { emoji: '🫡', name: 'Reliable',     bg: 'from-slate-300 to-gray-600'     },
 ];
 
 export const MYSTERY_VIBES = [

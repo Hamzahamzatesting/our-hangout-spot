@@ -390,6 +390,7 @@ function VoteCard({
   option, index, isLeading, isMyVote, totalVotes, profiles,
   onVote, isHost, onConfirm, confirmLoading, disabled,
 }: {
+  key?: React.Key;
   option: PlanOption; index: number; isLeading: boolean; isMyVote: boolean;
   totalVotes: number; profiles: Record<string, any>;
   onVote: () => void; isHost: boolean;
@@ -618,7 +619,7 @@ function ConfirmedBanner({ session, isHost, onReveal, revealLoading }: {
 }
 
 /* ── Chat Bubble ───────────────────────────────────────────────────────────── */
-function ChatBubble({ msg, isOwn }: { msg: ChatMessage; isOwn: boolean }) {
+function ChatBubble({ msg, isOwn }: { key?: React.Key; msg: ChatMessage; isOwn: boolean }) {
   const av = getAvatarByEmoji(msg.avatarEmoji);
   return (
     <div className={`flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>

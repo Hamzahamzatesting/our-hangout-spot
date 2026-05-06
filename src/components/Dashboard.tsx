@@ -171,7 +171,7 @@ export default function Dashboard({ profile, onSelectSession, onCreatePlan }: Pr
   );
 }
 
-function SessionCard({ session, index, onClick }: { session: SessionData; index: number; onClick: () => void }) {
+function SessionCard({ session, index, onClick }: { key?: React.Key; session: SessionData; index: number; onClick: () => void }) {
   const memberCount = session.members?.length ?? 0;
   const profiles = Object.values(session.memberProfiles ?? {}).slice(0, 4);
 

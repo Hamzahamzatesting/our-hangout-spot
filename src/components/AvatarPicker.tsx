@@ -13,13 +13,13 @@ interface Props {
 
 export default function AvatarPicker({ user, onSaved }: Props) {
   const [selected, setSelected] = useState<Avatar | null>(null);
-  const [name, setName] = useState(user.displayName?.split(' ')[0] ?? '');
+  const [name, setName] = useState(user.displayName ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const save = async () => {
-    if (!selected) { setError('Pick your vibe avatar first'); return; }
-    if (!name.trim()) { setError('Enter your name'); return; }
+    if (!selected) { setError('Pick your cartoon face first'); return; }
+    if (!name.trim()) { setError('Enter your full name'); return; }
     setSaving(true);
     setError('');
 
@@ -60,9 +60,9 @@ export default function AvatarPicker({ user, onSaved }: Props) {
           <p className="label-xs mb-2">Step 1 of 1</p>
           <h1 className="text-4xl font-black uppercase tracking-tight text-gradient"
               style={{ fontFamily: 'Anton, sans-serif' }}>
-            Pick your vibe
+            Make your card
           </h1>
-          <p className="text-white/40 text-sm mt-2">This is how your crew sees you</p>
+          <p className="text-white/40 text-sm mt-2">Full name and cartoon face are required to enter</p>
         </div>
 
         {/* Avatar grid */}
@@ -97,7 +97,7 @@ export default function AvatarPicker({ user, onSaved }: Props) {
               </div>
               <div>
                 <p className="font-bold text-white">{selected.name}</p>
-                <p className="text-white/40 text-xs">Your vibe avatar</p>
+                <p className="text-white/40 text-xs">Your cartoon face</p>
               </div>
             </motion.div>
           )}
@@ -105,12 +105,12 @@ export default function AvatarPicker({ user, onSaved }: Props) {
 
         {/* Name input */}
         <div>
-          <label className="label-xs block mb-2">Your name</label>
+          <label className="label-xs block mb-2">Full name</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
-            maxLength={24}
-            placeholder="What do your friends call you?"
+            maxLength={40}
+            placeholder="Enter your full name"
             className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/25 focus:outline-none focus:border-cyan-500 transition-colors text-base"
           />
         </div>
