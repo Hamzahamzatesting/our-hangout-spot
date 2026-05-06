@@ -22,8 +22,12 @@ export default function Landing() {
     setError('');
     try {
       await signIn();
-    } catch {
-      setError('Could not start your session. Try again.');
+    } catch (err: any) {
+      if (err?.code === 'auth/operation-not-allowed') {
+        setError('Anonymous sign-in is disabled in Firebase. Enable it once, then Start will work.');
+      } else {
+        setError(err?.message ?? 'Could not start your session. Try again.');
+      }
       setIsSigningIn(false);
     }
   };
