@@ -7,15 +7,31 @@ export default function Landing() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [showInstall, setShowInstall] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    const standalone = (window.navigator as any).standalone;
+    const standalone = (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches;
     setIsIOS(ios);
-    // Show install hint on iOS Safari only when NOT already installed
     if (ios && !standalone) setShowInstall(true);
+
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (!standalone) setShowInstall(true);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  const handleAndroidInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    setDeferredPrompt(null);
+    setShowInstall(false);
+  };
 
   const handleSignIn = async () => {
     setIsSigningIn(true);
@@ -92,9 +108,9 @@ export default function Landing() {
         <p className="text-white/20 text-xs mt-1">Full name + cartoon face required · No followers · No feed</p>
       </motion.div>
 
-      {/* iOS Install Banner */}
+      {/* Install Banner */}
       <AnimatePresence>
-        {showInstall && isIOS && (
+        {showInstall && (
           <motion.div
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -106,20 +122,29 @@ export default function Landing() {
               <p className="text-sm font-bold text-white/90">Add to Home Screen</p>
               <button onClick={() => setShowInstall(false)} className="text-white/40 text-xl leading-none">×</button>
             </div>
-            <div className="space-y-2">
-              {[
-                { icon: <Share size={14} />, text: 'Tap the Share button in Safari' },
-                { icon: <Plus size={14} />, text: 'Tap "Add to Home Screen"' },
-                { icon: <CheckCircle2 size={14} />, text: 'Open Hangout like a real app' },
-              ].map((step, i) => (
-                <div key={i} className="flex items-center gap-3 text-white/60 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-cyan-400 shrink-0">
-                    {step.icon}
+            {deferredPrompt ? (
+              <button
+                onClick={handleAndroidInstall}
+                className="btn-primary w-full text-sm font-bold uppercase tracking-widest"
+              >
+                Install Hangout
+              </button>
+            ) : (
+              <div className="space-y-2">
+                {[
+                  { icon: <Share size={14} />, text: 'Tap the Share button in Safari' },
+                  { icon: <Plus size={14} />, text: 'Tap "Add to Home Screen"' },
+                  { icon: <CheckCircle2 size={14} />, text: 'Open Hangout like a real app' },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3 text-white/60 text-xs">
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-cyan-400 shrink-0">
+                      {step.icon}
+                    </div>
+                    {step.text}
                   </div>
-                  {step.text}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
