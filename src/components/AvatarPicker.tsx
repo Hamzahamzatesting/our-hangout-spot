@@ -27,6 +27,7 @@ export default function AvatarPicker({ user, onSaved }: Props) {
 
     const profile: UserProfile = {
       uid: user.uid,
+      gangName: name.trim(),
       displayName: name.trim(),
       avatar: selected.emoji,
       avatarName: selected.name,

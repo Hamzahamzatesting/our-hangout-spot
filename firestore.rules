@@ -16,38 +16,51 @@ service cloud.firestore {
     // ── User Profiles ──────────────────────────────────────────────────────────
     match /users/{userId} {
       allow get:    if isSignedIn();
-      allow list:   if false;
+      allow list:   if isSignedIn();
       allow create: if isSignedIn() && isOwn(userId);
       allow update: if isSignedIn() && isOwn(userId);
       allow delete: if false;
     }
 
+    // ── Drops (48h feed) ───────────────────────────────────────────────────────
+    match /drops/{dropId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // ── Oracle (daily questions) ───────────────────────────────────────────────
+    match /oracle/{dateKey} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    // ── Wall (memories) ────────────────────────────────────────────────────────
+    match /wall/{momentId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if false;
+    }
+
     // ── Sessions ───────────────────────────────────────────────────────────────
     match /sessions/{sessionId} {
-
-      // Anyone signed-in who knows the ID can read (enables join-by-link)
       allow get: if isSignedIn();
-
-      // Only members can list their sessions
       allow list: if isSignedIn() && resource.data.members.hasAny([request.auth.uid]);
-
-      // Any signed-in user can create their own session
       allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
-
-      // Members & host can update; non-members can add themselves (join via link)
       allow update: if isSignedIn() && (
         isMemberOf(resource.data) ||
-        // Joining: user adds only themselves to members
         (
           !(request.auth.uid in resource.data.members) &&
           request.resource.data.members.hasAll(resource.data.members) &&
           request.resource.data.members.hasAny([request.auth.uid])
         )
       );
-
       allow delete: if false;
 
-      // ── Plan Options ─────────────────────────────────────────────────────────
       match /options/{optionId} {
         allow read:   if isSignedIn();
         allow create: if isSignedIn();
@@ -58,14 +71,12 @@ service cloud.firestore {
         );
       }
 
-      // ── Chat Messages ────────────────────────────────────────────────────────
       match /messages/{messageId} {
         allow read:          if isSignedIn();
         allow create:        if isSignedIn() && request.resource.data.userId == request.auth.uid;
         allow update, delete: if false;
       }
 
-      // ── Legacy Vibes (Echo Oracle) ───────────────────────────────────────────
       match /vibes/{vibeId} {
         allow read:   if isSignedIn();
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
