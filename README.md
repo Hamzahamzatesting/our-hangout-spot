@@ -6,6 +6,8 @@
 
 This contains everything you need to run your app locally.
 
+Latest app update includes the complete hangout planning experience with voting, mystery mode, avatars, and PWA support.
+
 View your app in AI Studio: https://ai.studio/apps/fa4aa7ee-246d-41fe-8f36-c7f3ff7f58f4
 
 ## Run Locally
