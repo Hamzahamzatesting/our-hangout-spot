@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Public profile for Echo participants",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "description": "The user's display name" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName"]
+    },
+    "Session": {
+      "title": "Echo Session",
+      "description": "A group planning session where vibes are gathered",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Name of the group or occasion" },
+        "status": {
+          "type": "string",
+          "enum": ["collecting", "deciding", "revealed"],
+          "description": "Current phase of the session"
+        },
+        "hostId": { "type": "string", "description": "UID of the session creator" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "members": { "type": "array", "description": "List of user UIDs in the session" },
+        "result": {
+          "type": "object",
+          "description": "The AI-synthesized destination data",
+          "properties": {
+            "name": { "type": "string" },
+            "reasoning": { "type": "string" },
+            "vibeMatch": { "type": "number" },
+            "location": { "type": "string" },
+            "imagePrompt": { "type": "string" }
+          }
+        }
+      },
+      "required": ["title", "status", "hostId", "createdAt"]
+    },
+    "Vibe": {
+      "title": "Vibe Input",
+      "description": "An individual's mood contribution to a session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The contributor's UID" },
+        "content": { "type": "string", "description": "Text or media reference for the vibe" },
+        "type": { "type": "string", "enum": ["text", "image"], "description": "Type of vibe input" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "content", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/sessions/{sessionId}": {
+      "schema": "Session",
+      "description": "Planning sessions"
+    },
+    "/sessions/{sessionId}/vibes/{vibeId}": {
+      "schema": "Vibe",
+      "description": "Individual vibe inputs for a session"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Echo: The Vibe Oracle",
+  "description": "A mystical group-planning app where AI synthesizes your collective vibes into the perfect outing.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "AI-powered decision making",
+    "Real-time social coordination"
+  ]
+}

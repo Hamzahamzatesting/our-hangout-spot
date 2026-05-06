@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,900;1,900&display=swap');
+
+@theme {
+  --font-display: "Anton", sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+:root {
+  --color-bg: #050505;
+  --color-cyan: #22d3ee;
+  --color-fuchsia: #c026d3;
+  --glass-surface: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  @apply bg-[#050505] text-white font-sans antialiased overflow-x-hidden;
+}
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% -20%, #1e1b4b, transparent 60%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.glass-card {
+  @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[32px];
+}
+
+.noctua-btn {
+  @apply h-20 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-[24px] flex items-center justify-center gap-4 hover:opacity-90 transition-all duration-300 shadow-lg shadow-cyan-500/20 active:scale-95;
+}
+
+.text-gradient {
+  @apply text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-fuchsia-500;
+}
+
+.reveal-mask {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
