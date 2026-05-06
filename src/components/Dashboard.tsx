@@ -1,147 +1,227 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, setDoc, doc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
-import { Plus, LogOut, ArrowRight, Ghost } from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+import { Plus, LogOut, Clock, CheckCircle, Sparkles, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { UserProfile, SessionData } from '../types';
+import { SOCIAL_COMMENTS, getAvatarByEmoji } from '../lib/avatars';
 import { handleFirestoreError, OperationType } from '../lib/error-handler';
 
-export default function Dashboard({ onSelectSession }: { onSelectSession: (id: string) => void }) {
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
+interface Props {
+  profile: UserProfile;
+  onSelectSession: (id: string, status?: string, result?: any) => void;
+  onCreatePlan: () => void;
+}
+
+export default function Dashboard({ profile, onSelectSession, onCreatePlan }: Props) {
+  const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!auth.currentUser) return;
-    
-    // Update user profile
-    setDoc(doc(db, 'users', auth.currentUser.uid), {
-      displayName: auth.currentUser.displayName,
-      photoURL: auth.currentUser.photoURL,
-      lastActive: serverTimestamp()
-    }, { merge: true });
-
     const q = query(
-      collection(db, 'sessions'), 
-      where('members', 'array-contains', auth.currentUser.uid)
+      collection(db, 'sessions'),
+      where('members', 'array-contains', auth.currentUser.uid),
+      orderBy('createdAt', 'desc')
     );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setSessions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'sessions'));
-
-    return () => unsubscribe();
+    const unsub = onSnapshot(q, snap => {
+      setSessions(snap.docs.map(d => ({ id: d.id, ...d.data() } as SessionData)));
+      setLoading(false);
+    }, err => {
+      handleFirestoreError(err, OperationType.LIST, 'sessions');
+      setLoading(false);
+    });
+    return () => unsub();
   }, []);
 
-  const createSession = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !auth.currentUser) return;
+  const active = sessions.filter(s => s.status === 'collecting');
+  const past = sessions.filter(s => s.status === 'confirmed' || s.status === 'revealed');
 
-    try {
-      const docRef = await addDoc(collection(db, 'sessions'), {
-        title: newTitle,
-        status: 'collecting',
-        hostId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-        members: [auth.currentUser.uid]
-      });
-      setNewTitle('');
-      setShowCreate(false);
-      onSelectSession(docRef.id);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, 'sessions');
-    }
-  };
+  // Fun social comment seeded by name
+  const commentIndex = profile.displayName.charCodeAt(0) % SOCIAL_COMMENTS.length;
+  const socialComment = SOCIAL_COMMENTS[commentIndex];
+
+  const avatar = getAvatarByEmoji(profile.avatar);
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6">
-      <header className="flex justify-between items-end mb-16">
+    <div className="min-h-screen flex flex-col pb-32">
+      {/* Header */}
+      <header className="px-6 pt-14 pb-6 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-1.5 h-6 bg-cyan-400 rounded-full" />
-            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-[.3em]">Active Rituals</span>
-          </div>
-          <h2 className="text-5xl font-black uppercase tracking-tighter italic">Pacts</h2>
+          <p className="label-xs mb-1">Your space</p>
+          <h1 className="text-3xl font-black uppercase tracking-tight"
+              style={{ fontFamily: 'Anton, sans-serif' }}>
+            Hangout
+          </h1>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-             <div className="text-sm font-bold">{auth.currentUser?.displayName}</div>
-             <div className="text-[10px] text-white/40 uppercase tracking-widest font-mono">Status: Connected</div>
+        <div className="flex items-center gap-3">
+          <div className={`avatar-bubble bg-gradient-to-br ${avatar.bg} text-xl`}>
+            {profile.avatar}
           </div>
-          <button onClick={() => auth.signOut()} className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:text-fuchsia-400 transition-colors">
-            <LogOut size={20} />
+          <button
+            onClick={() => auth.signOut()}
+            className="btn-icon"
+            title="Sign out"
+          >
+            <LogOut size={18} />
           </button>
         </div>
       </header>
 
-      <div className="grid gap-6">
-        <AnimatePresence mode="popLayout">
-          {sessions.map((session) => (
-            <motion.div
-              layout
-              key={session.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              onClick={() => onSelectSession(session.id)}
-              className="glass-card group p-8 cursor-pointer flex items-center justify-between hover:bg-white/[0.05] transition-all border-white/5 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-cyan-400 to-fuchsia-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-2 group-hover:text-cyan-400 transition-colors uppercase tracking-tight">{session.title}</h3>
-                <div className="flex items-center gap-3">
-                  <div className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border ${session.status === 'collecting' ? 'border-cyan-500/50 text-cyan-400 bg-cyan-500/10' : 'border-white/10 text-white/40'}`}>
-                    {session.status}
-                  </div>
-                  <span className="text-[10px] text-white/20 uppercase font-mono">{new Date(session.createdAt?.seconds * 1000).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-black transition-all">
-                <ArrowRight size={24} />
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+      {/* Profile card */}
+      <div className="px-6 mb-6">
+        <div className="glass-card p-5 flex items-center gap-4">
+          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${avatar.bg} flex items-center justify-center text-3xl shrink-0`}>
+            {profile.avatar}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-lg truncate">{profile.displayName}</p>
+            <p className="text-white/40 text-xs mt-0.5 truncate">
+              {profile.displayName} {socialComment}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-2xl font-black text-gradient">{profile.totalPlans ?? 0}</p>
+            <p className="label-xs">plans</p>
+          </div>
+        </div>
+      </div>
 
-        {sessions.length === 0 && (
-          <div className="text-center py-32 border-2 border-dashed border-white/5 rounded-[32px]">
-            <Ghost className="mx-auto mb-4 text-white/10" size={64} />
-            <p className="text-white/20 font-medium italic">Your vault is empty. Summon your first ritual.</p>
+      <div className="flex-1 px-6 space-y-8">
+        {/* Active plans */}
+        {(loading || active.length > 0) && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
+              <p className="label-xs text-cyan-400">Active plans</p>
+            </div>
+            <AnimatePresence mode="popLayout">
+              {loading ? (
+                [1, 2].map(i => (
+                  <div key={i} className="h-24 rounded-[28px] shimmer mb-3" />
+                ))
+              ) : (
+                active.map((s, i) => (
+                  <SessionCard key={s.id} session={s} index={i} onClick={() => onSelectSession(s.id, s.status, s.result)} />
+                ))
+              )}
+            </AnimatePresence>
+          </section>
+        )}
+
+        {/* Past plans / Memory */}
+        {past.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy size={12} className="text-yellow-400" />
+              <p className="label-xs text-yellow-400">Memory vault</p>
+            </div>
+            <div className="space-y-3">
+              {past.slice(0, 5).map((s, i) => (
+                <motion.button
+                  key={s.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => onSelectSession(s.id, s.status, s.result)}
+                  className="w-full glass-card-sm p-4 flex items-center gap-4 text-left hover:bg-white/5 transition-colors active:scale-[0.99]"
+                >
+                  <CheckCircle size={16} className="text-emerald-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{s.title}</p>
+                    {s.confirmedOptionText && (
+                      <p className="text-white/40 text-xs truncate mt-0.5">→ {s.confirmedOptionText}</p>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    <p className="text-white/25 text-xs">
+                      {s.createdAt?.seconds
+                        ? new Date(s.createdAt.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                        : ''}
+                    </p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {!loading && sessions.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+              <Sparkles size={32} className="text-white/20" />
+            </div>
+            <p className="text-white/30 font-medium mb-2">No plans yet</p>
+            <p className="text-white/20 text-sm">Create your first plan and invite your crew</p>
           </div>
         )}
       </div>
 
+      {/* FAB */}
       <motion.button
-        whileHover={{ scale: 1.1, rotate: 90 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setShowCreate(true)}
-        className="fixed bottom-12 right-12 w-20 h-20 bg-white text-black rounded-[24px] shadow-[0_20px_50px_rgba(255,255,255,0.2)] flex items-center justify-center z-40"
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.93 }}
+        onClick={onCreatePlan}
+        className="fixed bottom-8 right-6 w-16 h-16 bg-gradient-to-br from-cyan-500 to-fuchsia-600 rounded-[20px] flex items-center justify-center shadow-[0_8px_32px_rgba(34,211,238,0.35)] z-40"
       >
-        <Plus size={36} strokeWidth={3} />
+        <Plus size={28} strokeWidth={2.5} className="text-black" />
       </motion.button>
-
-      {showCreate && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="glass-card p-10 w-full max-w-md relative"
-          >
-            <h2 className="text-2xl font-bold mb-6">Name the Ritual</h2>
-            <form onSubmit={createSession}>
-              <input
-                autoFocus
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-4 mb-6 focus:outline-none focus:border-accent transition-colors"
-                placeholder="Friday Night Out..."
-              />
-              <div className="flex gap-4">
-                <button type="submit" className="flex-1 bg-white text-black py-4 rounded-xl font-bold">Create</button>
-                <button type="button" onClick={() => setShowCreate(false)} className="px-6 py-4 rounded-xl border border-white/10">Cancel</button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
     </div>
+  );
+}
+
+function SessionCard({ session, index, onClick }: { session: SessionData; index: number; onClick: () => void }) {
+  const memberCount = session.members?.length ?? 0;
+  const profiles = Object.values(session.memberProfiles ?? {}).slice(0, 4);
+
+  return (
+    <motion.button
+      layout
+      initial={{ x: -20, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ delay: index * 0.06 }}
+      onClick={onClick}
+      className="w-full glass-card p-5 text-left flex items-center gap-4 hover:bg-white/[0.04] active:scale-[0.99] transition-all mb-3"
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          {session.mysteryMode && (
+            <span className="text-xs bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 px-2 py-0.5 rounded-full font-medium">
+              🕵️ Mystery
+            </span>
+          )}
+          <h3 className="font-bold text-base truncate">{session.title}</h3>
+        </div>
+        <div className="flex items-center gap-3">
+          {session.date && (
+            <span className="flex items-center gap-1 text-white/40 text-xs">
+              <Clock size={10} />
+              {new Date(session.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+              {session.time && ` · ${session.time}`}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Member avatars */}
+      <div className="flex items-center shrink-0">
+        <div className="flex -space-x-2">
+          {profiles.map((p, i) => {
+            const av = getAvatarByEmoji(p.avatar);
+            return (
+              <div key={i} className={`avatar-bubble-sm bg-gradient-to-br ${av.bg} text-sm`}>
+                {p.avatar}
+              </div>
+            );
+          })}
+          {memberCount > 4 && (
+            <div className="avatar-bubble-sm bg-white/10 text-[10px] font-bold">
+              +{memberCount - 4}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.button>
   );
 }

@@ -1,89 +1,75 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 0. Default Deny
+
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper Primitives
     function isSignedIn() { return request.auth != null; }
-    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
-    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
-    function incoming() { return request.resource.data; }
-    function existing() { return resource.data; }
-
-    // User Profiles
-    match /users/{userId} {
-      function isValidUser(data) {
-        return data.keys().hasAll(['displayName']) &&
-               data.keys().size() <= 3 &&
-               data.displayName is string && data.displayName.size() <= 50;
-      }
-      allow get: if isSignedIn() && isValidId(userId);
-      allow create: if isVerified() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming());
-      allow update: if isVerified() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming()) &&
-                      incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'lastActive']);
+    function isOwn(uid) { return request.auth.uid == uid; }
+    function isHost(sessionData) { return request.auth.uid == sessionData.hostId; }
+    function isMemberOf(sessionData) {
+      return request.auth.uid in sessionData.members || isHost(sessionData);
     }
 
-    // Sessions
+    // ── User Profiles ──────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow get:    if isSignedIn();
+      allow list:   if false;
+      allow create: if isSignedIn() && isOwn(userId);
+      allow update: if isSignedIn() && isOwn(userId);
+      allow delete: if false;
+    }
+
+    // ── Sessions ───────────────────────────────────────────────────────────────
     match /sessions/{sessionId} {
-      function isValidSession(data) {
-        return data.keys().hasAll(['title', 'status', 'hostId', 'createdAt']) &&
-               data.keys().size() <= 6 &&
-               data.title is string && data.title.size() <= 100 &&
-               data.status in ['collecting', 'deciding', 'revealed'] &&
-               data.hostId is string &&
-               data.createdAt is timestamp;
-      }
 
-      function isMember(data) {
-        return isSignedIn() && (request.auth.uid == data.hostId || (data.keys().hasAny(['members']) && request.auth.uid in data.members));
-      }
+      // Anyone signed-in who knows the ID can read (enables join-by-link)
+      allow get: if isSignedIn();
 
-      allow get: if isValidId(sessionId) && isMember(existing());
+      // Only members can list their sessions
       allow list: if isSignedIn() && resource.data.members.hasAny([request.auth.uid]);
-      
-      allow create: if isVerified() && 
-                    isValidId(sessionId) &&
-                    isValidSession(incoming()) && 
-                    incoming().hostId == request.auth.uid &&
-                    incoming().status == 'collecting' &&
-                    incoming().createdAt == request.time;
 
-      allow update: if isVerified() && isValidId(sessionId) && (
-        // Action: Join
-        (incoming().diff(existing()).affectedKeys().hasOnly(['members'])) ||
-        // Action: Update Status or Results (Host Only)
-        (request.auth.uid == existing().hostId && 
-         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'result', 'title']))
-      ) && isValidSession(incoming());
-      
-      allow delete: if false; // Sessions are permanent records of vibes
+      // Any signed-in user can create their own session
+      allow create: if isSignedIn() && request.resource.data.hostId == request.auth.uid;
 
-      // Vibes Subcollection
+      // Members & host can update; non-members can add themselves (join via link)
+      allow update: if isSignedIn() && (
+        isMemberOf(resource.data) ||
+        // Joining: user adds only themselves to members
+        (
+          !(request.auth.uid in resource.data.members) &&
+          request.resource.data.members.hasAll(resource.data.members) &&
+          request.resource.data.members.hasAny([request.auth.uid])
+        )
+      );
+
+      allow delete: if false;
+
+      // ── Plan Options ─────────────────────────────────────────────────────────
+      match /options/{optionId} {
+        allow read:   if isSignedIn();
+        allow create: if isSignedIn();
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn() && (
+          request.auth.uid == resource.data.createdBy ||
+          request.auth.uid == get(/databases/$(database)/documents/sessions/$(sessionId)).data.hostId
+        );
+      }
+
+      // ── Chat Messages ────────────────────────────────────────────────────────
+      match /messages/{messageId} {
+        allow read:          if isSignedIn();
+        allow create:        if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      // ── Legacy Vibes (Echo Oracle) ───────────────────────────────────────────
       match /vibes/{vibeId} {
-        function isValidVibe(data) {
-          return data.keys().hasAll(['userId', 'content', 'type', 'createdAt']) &&
-                 data.userId is string && data.userId == request.auth.uid &&
-                 data.content is string && data.content.size() <= 1000 &&
-                 data.type in ['text', 'image'] &&
-                 data.createdAt is timestamp;
-        }
-
-        allow list, get: if isMember(get(/databases/$(database)/documents/sessions/$(sessionId)).data);
-        
-        allow create: if isVerified() && 
-                      isMember(get(/databases/$(database)/documents/sessions/$(sessionId)).data) &&
-                      isValidVibe(incoming()) &&
-                      incoming().createdAt == request.time;
-                      
-        allow update: if isVerified() && 
-                      request.auth.uid == existing().userId &&
-                      isValidVibe(incoming()) &&
-                      incoming().diff(existing()).affectedKeys().hasOnly(['content', 'type']);
-                      
-        allow delete: if isVerified() && (request.auth.uid == existing().userId || request.auth.uid == get(/databases/$(database)/documents/sessions/$(sessionId)).data.hostId);
+        allow read:   if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
       }
     }
   }

@@ -1,46 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,900;1,900&display=swap');
 
 @theme {
   --font-display: "Anton", sans-serif;
-  --font-serif: "Playfair Display", serif;
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 }
 
+/* ── Base ──────────────────────────────────────────────────────────────────── */
 :root {
-  --color-bg: #050505;
-  --color-cyan: #22d3ee;
-  --color-fuchsia: #c026d3;
-  --glass-surface: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --cyan: #22d3ee;
+  --fuchsia: #c026d3;
+  --bg: #050505;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 body {
   @apply bg-[#050505] text-white font-sans antialiased overflow-x-hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
+#root { height: 100%; }
+
+/* ── Atmosphere background glow ───────────────────────────────────────────── */
 .atmosphere {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at 50% -20%, #1e1b4b, transparent 60%);
-  opacity: 0.5;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(192,38,211,0.10), transparent);
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
+/* ── Glass card ────────────────────────────────────────────────────────────── */
 .glass-card {
-  @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[32px];
+  @apply bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[28px];
 }
 
-.noctua-btn {
-  @apply h-20 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-[24px] flex items-center justify-center gap-4 hover:opacity-90 transition-all duration-300 shadow-lg shadow-cyan-500/20 active:scale-95;
+.glass-card-sm {
+  @apply bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl;
 }
 
+/* ── Primary CTA button ────────────────────────────────────────────────────── */
+.btn-primary {
+  @apply h-16 bg-gradient-to-r from-cyan-500 to-fuchsia-600 rounded-2xl flex items-center justify-center gap-3
+         font-bold text-white shadow-lg shadow-cyan-500/20
+         hover:opacity-90 active:scale-95 transition-all duration-200
+         disabled:opacity-40 disabled:cursor-not-allowed select-none;
+}
+
+.btn-ghost {
+  @apply h-14 px-6 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-2
+         font-medium hover:bg-white/8 active:scale-95 transition-all duration-200 select-none;
+}
+
+.btn-icon {
+  @apply w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center
+         hover:bg-white/10 active:scale-95 transition-all duration-200 select-none;
+}
+
+/* ── Text utilities ────────────────────────────────────────────────────────── */
 .text-gradient {
   @apply text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-fuchsia-500;
 }
 
-.reveal-mask {
-  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+.label-xs {
+  @apply text-[10px] font-bold uppercase tracking-[0.2em] text-white/40;
 }
+
+/* ── Avatar bubble ─────────────────────────────────────────────────────────── */
+.avatar-bubble {
+  @apply w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0
+         bg-gradient-to-br ring-2 ring-black;
+}
+
+.avatar-bubble-sm {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-base shrink-0
+         bg-gradient-to-br ring-2 ring-black;
+}
+
+/* ── Vote option card ──────────────────────────────────────────────────────── */
+.vote-card {
+  @apply bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-2xl p-4
+         cursor-pointer select-none transition-all duration-200 active:scale-[0.98];
+}
+
+.vote-card-winner {
+  @apply border-cyan-500/60 shadow-[0_0_20px_rgba(34,211,238,0.15)];
+}
+
+.vote-card-voted {
+  @apply border-fuchsia-500/50;
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────────── */
+.vote-bar {
+  @apply h-1.5 rounded-full bg-white/10 overflow-hidden;
+}
+
+.vote-bar-fill {
+  @apply h-full rounded-full transition-all duration-500 ease-out;
+}
+
+/* ── Chat message bubbles ──────────────────────────────────────────────────── */
+.msg-bubble-mine {
+  @apply bg-gradient-to-br from-fuchsia-600 to-indigo-600
+         rounded-[20px] rounded-tr-sm px-4 py-3 max-w-[80%] text-sm;
+}
+
+.msg-bubble-theirs {
+  @apply bg-white/[0.06] border border-white/10
+         rounded-[20px] rounded-tl-sm px-4 py-3 max-w-[80%] text-sm;
+}
+
+/* ── Reveal mask for scrollable areas ─────────────────────────────────────── */
+.reveal-mask {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+/* ── Mystery vibe card ─────────────────────────────────────────────────────── */
+.mystery-card {
+  @apply relative overflow-hidden rounded-3xl border border-white/10
+         flex flex-col items-center justify-center p-10 text-center select-none;
+  background: linear-gradient(135deg, rgba(34,211,238,0.06), rgba(192,38,211,0.06));
+}
+
+/* ── Pulse dot (presence) ──────────────────────────────────────────────────── */
+.presence-dot {
+  @apply w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)];
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Confetti burst (vote confirmation) ────────────────────────────────────── */
+@keyframes burst {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+.confetti-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: burst 0.5s ease-out forwards;
+}
+
+/* ── Spin slow ─────────────────────────────────────────────────────────────── */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* ── Shimmer loading ───────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Safe area paddings ────────────────────────────────────────────────────── */
+.safe-top    { padding-top: max(1.5rem, env(safe-area-inset-top)); }
+.safe-bottom { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
