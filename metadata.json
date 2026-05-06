@@ -1,6 +1,6 @@
 {
-  "name": "Echo: The Vibe Oracle",
-  "description": "A mystical group-planning app where AI synthesizes your collective vibes into the perfect outing.",
+  "name": "Hangout",
+  "description": "Plan outings with your group in under a minute. Vote, chat, confirm, and keep the crew in sync.",
   "requestFramePermissions": [
     "camera",
     "geolocation"

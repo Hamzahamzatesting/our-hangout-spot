@@ -1,5 +1,13 @@
-const CACHE = 'hangout-v1';
-const STATIC = ['/', '/index.html', '/manifest.json', '/icon.svg'];
+const CACHE = 'hangout-v2';
+const STATIC = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(
